@@ -1,0 +1,8 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+python-dotenv==1.1.1
+requests==2.32.3
+langchain==0.3.27
+langgraph==0.4.8
+groq==0.20.0
+pyyaml>=6.0

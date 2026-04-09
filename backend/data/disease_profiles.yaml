@@ -1,0 +1,297 @@
+# Disease profiles for drug repurposing reasoning.
+# Each disease entry drives target relevance, biological boosting, lifecycle
+# stage inference, and mechanism priors — all formerly hardcoded in reasoner.py.
+#
+# To add a new disease, append an entry here; no Python changes needed.
+# For any disease NOT listed here the reasoner falls back to data-driven
+# scoring derived from protein disease-degree specificity.
+
+diseases:
+
+  hiv:
+    aliases:
+      - "human immunodeficiency virus"
+      - "hiv infection"
+      - "hiv-1"
+      - "hiv-2"
+      - "acquired immune deficiency syndrome"
+      - "aids"
+    neuro_disease: false
+
+    known_targets:
+      - CCR5
+      - CXCR4
+      - CD4
+      - CXCL12
+      - IL2RA
+      - TLR7
+
+    # Per-protein relevance scores (0–1). Proteins absent from this map fall
+    # back to generic scores in _target_relevance().
+    target_relevance:
+      CCR5: 1.00
+      CXCR4: 1.00
+      CD4: 0.95
+      CXCL12: 0.85
+      IL2RA: 0.70
+      TLR7: 0.68
+
+    # Added on top of raw score for high-priority disease drivers.
+    biological_boost:
+      CCR5: 3.0
+      CXCR4: 3.0
+      CD4: 2.6
+      CXCL12: 1.8
+
+    # Drug names whose presence immediately boosts evidence_weight to 1.5.
+    drug_evidence_keywords:
+      - maraviroc
+      - dolutegravir
+      - raltegravir
+      - tenofovir
+      - lamivudine
+
+    # Mechanism pathway priors — weight how much each signalling axis matters.
+    mechanism_priors:
+      "Viral entry / host co-receptor axis": 0.50
+      "Innate immune sensing": 0.20
+      "NF-kB / inflammatory signaling": 0.15
+      "JAK-STAT / cytokine signaling": 0.10
+      "General protein-target interaction": 0.05
+
+    lifecycle_stages:
+      Entry:
+        prior: 0.30
+        targets: [CCR5, CXCR4, CD4, CXCL12]
+        drug_keywords:
+          - maraviroc
+          - cenicriviroc
+          - fostemsavir
+          - ibalizumab
+          - enfuvirtide
+
+      "Reverse transcription":
+        prior: 0.30
+        targets: [POL, RT, REVERSE_TRANSCRIPTASE]
+        drug_keywords:
+          - zidovudine
+          - lamivudine
+          - tenofovir
+          - emtricitabine
+          - abacavir
+          - efavirenz
+          - nevirapine
+          - rilpivirine
+
+      Integration:
+        prior: 0.20
+        targets: [IN, INTEGRASE, PSIP1]
+        drug_keywords:
+          - dolutegravir
+          - raltegravir
+          - bictegravir
+          - elvitegravir
+          - cabotegravir
+
+      Maturation:
+        prior: 0.15
+        targets: [PR, PROTEASE]
+        drug_keywords:
+          - ritonavir
+          - lopinavir
+          - darunavir
+          - atazanavir
+          - saquinavir
+
+      "Host immune modulation":
+        prior: 0.05
+        targets: [TLR7, IL2RA, TNF, NFKB1]
+        drug_keywords: []
+
+  # ---------------------------------------------------------------------------
+
+  covid:
+    aliases:
+      - "covid-19"
+      - "covid19"
+      - "coronavirus"
+      - "sars-cov-2"
+      - "coronavirus disease"
+      - "sars coronavirus"
+    neuro_disease: false
+
+    known_targets:
+      - ACE2
+      - TMPRSS2
+      - TBK1
+      - IKBKB
+      - IL6
+      - IL6R
+      - JAK1
+      - TYK2
+
+    target_relevance:
+      ACE2: 1.00
+      TMPRSS2: 0.95
+      TBK1: 0.90
+      IKBKB: 0.90
+      CHUK: 0.82
+      IL6: 0.85
+      IL6R: 0.85
+      JAK1: 0.80
+      TYK2: 0.78
+
+    biological_boost:
+      ACE2: 2.5
+      TMPRSS2: 2.4
+      TBK1: 2.0
+      IKBKB: 1.8
+      IL6: 1.8
+      JAK1: 1.6
+      TYK2: 1.5
+
+    drug_evidence_keywords:
+      - baricitinib
+      - tocilizumab
+      - dexamethasone
+      - tofacitinib
+      - remdesivir
+
+    mechanism_priors:
+      "Innate immune sensing": 0.25
+      "JAK-STAT / cytokine signaling": 0.27
+      "NF-kB / inflammatory signaling": 0.24
+      "MAPK stress-response signaling": 0.16
+      "General protein-target interaction": 0.08
+
+    lifecycle_stages:
+      "Viral entry":
+        prior: 0.30
+        targets: [ACE2, TMPRSS2, ADAM17, DPP4]
+        drug_keywords:
+          - camostat
+          - nafamostat
+
+      "Host inflammatory response":
+        prior: 0.45
+        targets: [IL6, IL6R, TNF, CHUK, IKBKB, NFKB1]
+        drug_keywords:
+          - tocilizumab
+          - dexamethasone
+          - anakinra
+
+      "Antiviral replication control":
+        prior: 0.20
+        targets: [TBK1, IRF3, TLR3, TLR7]
+        drug_keywords:
+          - remdesivir
+          - molnupiravir
+          - nirmatrelvir
+
+      "Host immune modulation":
+        prior: 0.05
+        targets: [JAK1, JAK2, TYK2, STAT1, STAT3]
+        drug_keywords:
+          - baricitinib
+          - tofacitinib
+
+  # ---------------------------------------------------------------------------
+
+  alzheimer:
+    aliases:
+      - "alzheimer's disease"
+      - "alzheimer disease"
+      - "alzheimers"
+      - "senile dementia"
+      - "alzheimer dementia"
+      - "ad"
+    neuro_disease: true
+
+    known_targets:
+      - APP
+      - PSEN1
+      - PSEN2
+      - MAPT
+      - APOE
+      - ACHE
+      - BACE1
+      - GSK3B
+
+    target_relevance:
+      APP: 1.00
+      BACE1: 1.00
+      MAPT: 0.95
+      PSEN1: 0.95
+      PSEN2: 0.90
+      APOE: 0.90
+      ACHE: 0.80
+      GSK3B: 0.75
+      CDK1: 0.20
+      AURKB: 0.10
+
+    biological_boost:
+      APP: 3.0
+      BACE1: 3.0
+      PSEN1: 2.2
+      MAPT: 2.5
+      TREM2: 2.0
+      PSEN2: 2.0
+      ACHE: 2.0
+      APOE: 1.8
+
+    drug_evidence_keywords:
+      - donepezil
+      - rivastigmine
+      - galantamine
+      - memantine
+      - rutin
+      - kaempferol
+
+    mechanism_priors:
+      "Neurodegeneration / amyloid-tau axis": 0.55
+      "NF-kB / inflammatory signaling": 0.15
+      "MAPK stress-response signaling": 0.10
+      "Innate immune sensing": 0.10
+      "General protein-target interaction": 0.10
+
+    lifecycle_stages:
+      "Amyloid processing":
+        prior: 0.40
+        targets: [APP, BACE1, PSEN1, PSEN2, APOE]
+        drug_keywords:
+          - aducanumab
+          - lecanemab
+          - donanemab
+
+      "Tau/stress signaling":
+        prior: 0.30
+        targets: [MAPT, GSK3B, CDK5, MAPK1]
+        drug_keywords:
+          - lithium
+
+      Neuroinflammation:
+        prior: 0.20
+        targets: [TREM2, NFKB1, CHUK, IKBKB, TNF]
+        drug_keywords: []
+
+      "Synaptic/cholinergic":
+        prior: 0.10
+        targets: [ACHE, CHRNA7, GRIN2B]
+        drug_keywords:
+          - donepezil
+          - rivastigmine
+          - galantamine
+
+  # ---------------------------------------------------------------------------
+  # Template for adding a new disease — copy, fill in, and the system picks
+  # it up automatically on next restart.
+  #
+  # <disease_token>:            # lowercase key, used for internal matching
+  #   aliases: []               # other strings that should map to this profile
+  #   neuro_disease: false
+  #   known_targets: []
+  #   target_relevance: {}
+  #   biological_boost: {}
+  #   drug_evidence_keywords: []
+  #   mechanism_priors: {}
+  #   lifecycle_stages: {}
