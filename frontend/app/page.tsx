@@ -48,22 +48,30 @@ type StreamEvent =
   | { type: "final"; data: QueryResponse }
   | { type: "error"; message: string };
 
-const DEPLOYED_API_BASE = "http://drugapp.nstsdc.org";
+const DEPLOYED_API_BASE = "https://drugapp.nstsdc.org";
 const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const FALLBACK_API_BASE =
   process.env.NEXT_PUBLIC_API_FALLBACK_URL ?? "http://127.0.0.1:8000";
-const API_BASES = Array.from(
-  new Set([
-    DEPLOYED_API_BASE,
-    ENV_API_BASE,
-    FALLBACK_API_BASE,
-  ].filter((value): value is string => Boolean(value))),
-);
+
+function getApiBases(): string[] {
+  const primary = ENV_API_BASE || DEPLOYED_API_BASE;
+  const bases = [primary];
+
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "::1";
+    if (isLocalHost && FALLBACK_API_BASE && FALLBACK_API_BASE !== primary) {
+      bases.push(FALLBACK_API_BASE);
+    }
+  }
+
+  return Array.from(new Set(bases));
+}
 
 async function fetchWithFallback(path: string, init?: RequestInit): Promise<Response> {
   let lastError: Error | null = null;
 
-  for (const base of API_BASES) {
+  for (const base of getApiBases()) {
     try {
       const response = await fetch(`${base}${path}`, init);
       if (response.ok) {
