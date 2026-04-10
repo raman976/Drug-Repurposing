@@ -48,7 +48,35 @@ type StreamEvent =
   | { type: "final"; data: QueryResponse }
   | { type: "error"; message: string };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const DEPLOYED_API_BASE = "http://drugapp.nstsdc.org";
+const ENV_API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const FALLBACK_API_BASE =
+  process.env.NEXT_PUBLIC_API_FALLBACK_URL ?? "http://127.0.0.1:8000";
+const API_BASES = Array.from(
+  new Set([
+    DEPLOYED_API_BASE,
+    ENV_API_BASE,
+    FALLBACK_API_BASE,
+  ].filter((value): value is string => Boolean(value))),
+);
+
+async function fetchWithFallback(path: string, init?: RequestInit): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (const base of API_BASES) {
+    try {
+      const response = await fetch(`${base}${path}`, init);
+      if (response.ok) {
+        return response;
+      }
+      lastError = new Error(`Request failed (${response.status}) via ${base}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Unknown network error");
+    }
+  }
+
+  throw lastError ?? new Error("No API endpoint available");
+}
 
 export default function Home() {
   const [disease, setDisease] = useState("Alzheimer disease");
@@ -72,13 +100,10 @@ export default function Home() {
     const controller = new AbortController();
     const timeout = setTimeout(async () => {
       try {
-        const response = await fetch(
-          `${API_BASE}/disease-suggestions?q=${encodeURIComponent(trimmed)}&limit=8`,
+        const response = await fetchWithFallback(
+          `/disease-suggestions?q=${encodeURIComponent(trimmed)}&limit=8`,
           { signal: controller.signal },
         );
-        if (!response.ok) {
-          return;
-        }
         const payload = (await response.json()) as { suggestions?: string[] };
         setSuggestions(payload.suggestions ?? []);
       } catch {
@@ -100,7 +125,7 @@ export default function Home() {
     setLiveTrace(["Initializing biomedical reasoning agent..."]);
 
     try {
-      const response = await fetch(`${API_BASE}/query/stream`, {
+      const response = await fetchWithFallback("/query/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
