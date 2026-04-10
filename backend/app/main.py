@@ -28,11 +28,21 @@ load_dotenv(BASE_DIR / ".env.example")
 
 STRING_BASE_URL = os.getenv("STRING_BASE_URL", "https://version-12-0.string-db.org")
 STRING_CALLER_IDENTITY = os.getenv("STRING_CALLER_IDENTITY", "drug-repurposing-agent")
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if origin.strip()
+]
+CORS_ORIGIN_REGEX = os.getenv(
+    "CORS_ORIGIN_REGEX",
+    r"https://([a-zA-Z0-9-]+\.)*vercel\.app",
+)
 
 app = FastAPI(title="Drug Repurposing Reasoning API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=CORS_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
